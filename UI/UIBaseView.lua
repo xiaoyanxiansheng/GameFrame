@@ -1,4 +1,18 @@
--- UI的基类 控制UI的生命周期 加载 显示 隐藏 卸载
+-- region readme
+--[[
+    作用：UI的基类 控制UI的生命周期 加载 显示 隐藏 卸载
+    UI划分：可以通过表格来配置 并且后续不会改变
+        UI根据层级来分
+            1 固定层级UI 比如messageBox之类的弹出框
+            2 动态层级UI 一些普通的界面UI
+        UI根据类型划分
+            1 主UI 影响UI的打开关闭流程       比如 打开一个UI前要关闭上一个UI 关闭一个UI后要打开上一个UI
+            2 主UI 不影响UI的打开关闭流程
+            0 子UI
+    注意点：
+        1 类型划分中1类型的UI只能存在一个 其他类型不限制
+--]]
+-- endregion
 UIBaseView = class("UIBaseView");
 
 -- region public
@@ -26,11 +40,13 @@ end
 -- region init
 -- 构造
 function UIBaseView:ctor(name)
+    self._name                      = name;
+    self._depthType                 = nil;      -- 层级类型 nil 表示动态层级
+    self._showType                  = 2;        -- UI的显示类型 看头部解释
     self._initOkFlag                = false;    -- 是否加载
-    self._name                      = name; 
-    self._isOpen                    = false;    -- 是否打开了界面（异步加载，有可能还没有显示面板,隐藏也算打开，只有销毁才算false）
-    self._isShow                    = false;    -- 是否显示了界面（面板已显示）
     self._resident                  = false;    -- 常驻内存
+    self._isShow                    = false;    -- 是否显示了界面（面板已显示）
+    self._isHide                    = false;    -- 是否隐藏
     self.ui_core                    = nil;      -- 当前绑定UICore
     self._csBaseView                = nil;      -- 当前baseView脚本
     self._currentDepth              = 0;        -- 界面深度值
@@ -39,12 +55,16 @@ function UIBaseView:ctor(name)
     self._asyncRequest              = nil;      -- 异步加载请求
     self._loadingGameObjectCount    = 0;        -- 自定义加载
     self._isRegisterCallback        = false;    -- 是否已经注册消息
-    self._isHide                    = false;    -- 是否隐藏
     self._notiList                  = nil;      -- 消息事件列表
     self.pre_luastepgc_mem          = 0;        -- 上次内存值
     self.pre_luastepgc_time         = 0;        -- 上次清理时间
     self.isReveal                   = false;    -- ui的打开方式分为两种 一种是主动打开 一种的被动打开
     self.params                     = nil;      -- 打开ui的参数
+
+    if name and ViewPath[name] then
+        self._abName = ViewPath[name][1];
+        UIManager:RegisterUIScript(name, self);
+    end
 end
 -- 加载UI
 function UIBaseView:Init(initOkDelegateFunc)
@@ -361,5 +381,15 @@ function UIBaseView:ShowMainColliderBox()
 end
 function UIBaseView:HideMainColliderBox()
     -- 代码...
+end
+-- 具体看头部显示类型解释
+function UIBaseView:IsFullUI()
+    return self._showType == 1;
+end
+function UIBaseView:IsFullUIIgnoreFlow()
+    return self._showType == 2;
+end
+function UIBaseView:IsSonUI()
+    return self._showType == 0;
 end
 -- endregion
