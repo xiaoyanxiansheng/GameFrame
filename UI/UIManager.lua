@@ -182,9 +182,20 @@ function UIManager:RegisterUIScript(name,uiScript)
     end
 
 end
--- UI的分类 参考UIBaseView头部解释
-function UIManager:IsAllSonView()
-    -- 代码...
+function UIManager:IsAllSonView(views)
+    local isAllSonView = true;
+    if views then 
+        for k,v in pairs(views) do
+            if not self:IsSonView(v) then 
+                isAllSonView = false;
+                break;
+            end
+        end
+    end 
+    return isAllSonView;
+end
+function UIManager:IsSonView(view)
+    return view._showType == 0;
 end
 -- 已经加载列表
 function UIManager:AddInitWindowStack(windowStack)

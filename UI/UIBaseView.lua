@@ -48,7 +48,6 @@ function UIBaseView:ctor(name)
     self._isShow                    = false;    -- 是否显示了界面（面板已显示）
     self._isHide                    = false;    -- 是否隐藏
     self.ui_core                    = nil;      -- 当前绑定UICore
-    self._csBaseView                = nil;      -- 当前baseView脚本
     self._currentDepth              = 0;        -- 界面深度值
     self._initOkDelegate            = nil;      -- 加载之后的回调
     self._isLoadUIAtlas             = false;    -- atlas 是否加载
@@ -111,9 +110,11 @@ function UIBaseView:OnCreateInstance(instance)
 
     self._initOkFlag = true;
 
-    -- TODO WG 这里会将prefab中引用的gameObject绑定到当前的lua脚本中
-    -- 除了绑定gameObject 也会绑定各种ui事件
-    UIBaseCSView.Init(instance, self, self._abName)
+    -- 绑定gameObject 也会绑定各种ui事件
+    local uicore = GetComponent("UICore");
+    if uicore then 
+        uicore:Init(self);
+    end
 
     -- 消息事件注册
     self:OnRegisterCallback()
@@ -372,7 +373,12 @@ function UIBaseView:UIGCCollect()
         end
     end
 end
-
+-- 这只参数
+function UIBaseView:SetOpenParam(params)
+    self.params = params or self.params;
+    self:HandleOpenParam(self.params)
+end
+function UIBaseView:HandleOpenParam(params)end
 -- UI在加载过程中全屏事件屏蔽
 -- 1 屏蔽UI事件
 -- 2 加载过程中是否显示黑屏
